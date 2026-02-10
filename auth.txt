@@ -1,0 +1,437 @@
+Why Passwords Are a Security Problem
+
+Users choose bad passwords:
+
+reused
+
+short
+
+predictable
+
+Servers face risks:
+
+DB leaks
+
+insider access
+
+backups stolen
+
+So the first golden rule:
+The server must NEVER know the user’s password
+The server must only know something it can VERIFY, not REVERSE
+
+That leads us to hashing.
+
+Hashing (Core Security Primitive)
+What hashing is
+
+Hashing is a one-way mathematical function:
+
+input → hash
+
+
+Once hashed:
+
+you cannot get the input back
+
+even the server can’t reverse it
+
+Why hashing works for passwords
+
+At login time, you don’t need the password.
+You only need to answer:
+
+“Is this password the same as before?”
+
+So you:
+
+hash the input password
+
+compare with stored hash
+
+Why NOT Encryption for Passwords
+Encryption
+data → encrypt → decrypt → data
+
+
+This means:
+
+a key exists
+
+if key leaks → all passwords exposed
+
+Hashing
+password → hash →  no reverse
+
+
+Even if DB leaks:
+
+attacker must brute force
+
+expensive and slow
+
+Passwords & OTPs must always be hashed, never encrypted
+
+Why bcrypt Specifically?
+
+Not all hashing algorithms are equal.
+
+Fast hashes (SHA, MD5)
+
+designed for speed
+
+attackers can try billions/sec
+
+GPUs destroy them
+
+bcrypt (designed for passwords)
+
+intentionally slow
+
+salt included
+
+cost factor adjustable
+
+GPU-resistant
+
+bcrypt is slow by design, and that’s good.
+
+Salt (The Most Misunderstood Concept)
+Problem without salt
+
+If two users have:
+
+password123
+
+
+They get:
+
+same hash
+
+
+Attackers can:
+
+precompute tables (rainbow tables)
+
+instantly crack many passwords
+
+Salt solves this
+
+Salt = random data added before hashing.
+
+bcrypt:
+
+generates a unique salt per password
+
+stores salt inside the hash
+
+Result:
+
+same password → different hashes
+
+rainbow tables useless
+
+bcrypt.compare (Why It’s Safe)
+
+At login:
+
+you do NOT hash manually
+
+you do NOT manage salt
+
+bcrypt.compare:
+
+extracts salt from stored hash
+
+hashes input password with same salt
+
+compares in constant time
+
+Constant time prevents timing attacks.
+
+Where Password Hash Is Stored
+
+Important mental shift:
+
+The password field does not store a password
+It stores a password hash
+
+After save:
+
+password field = hash
+
+
+Plaintext password:
+
+exists only in memory
+
+for milliseconds
+
+never reaches DB
+
+The Stateless Nature of HTTP (Big Problem)
+
+HTTP is stateless.
+
+That means:
+
+every request is independent
+
+server forgets everything after response
+
+So after login:
+
+POST /login → OK
+GET /artifacts →  who are you?
+
+
+We need a way to remember authentication.
+
+The “Remember User” Problem
+
+Bad solutions:
+
+send email+password every request 
+
+store sessions in server memory  (doesn’t scale)
+
+Correct solution:
+
+token-based authentication
+
+ What Is a Token?
+
+A token is:
+
+“Proof that authentication already happened”
+
+Properties:
+
+issued by server
+
+trusted by server
+
+sent by client on every request
+
+If token is valid:
+
+user is trusted
+
+no password needed again
+
+ JWT (JSON Web Token) – Deep Theory
+
+JWT is a self-contained token.
+
+Structure
+HEADER.PAYLOAD.SIGNATURE
+
+Header
+
+Describes:
+
+algorithm
+
+token type
+
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+Payload (Identity Data)
+
+Contains:
+
+user id
+
+role
+
+issued time
+
+expiry
+
+{
+  "id": "userId",
+  "role": "EDITOR",
+  "iat": 1700000000,
+  "exp": 1700003600
+}
+
+
+Payload is readable, not encrypted
+Never store secrets here.
+
+Signature (Security Backbone)
+
+Signature is created using:
+
+HEADER + PAYLOAD + JWT_SECRET
+
+
+Only the server knows the secret.
+
+If anything changes:
+
+signature breaks
+
+token rejected
+
+Why JWT Cannot Be Tampered With
+
+Attacker can:
+
+read payload  (fine)
+
+modify payload  (possible)
+
+But attacker cannot:
+
+re-sign token without secret
+
+Server verification:
+
+jwt.verify(token, secret)
+
+
+If tampered → signature mismatch → rejected.
+
+ Why JWT Needs Expiry
+
+JWTs are bearer tokens:
+
+Whoever has it IS the user
+
+If stolen:
+
+attacker becomes user
+
+until token expires
+
+Expiry:
+
+limits damage window
+
+forces re-authentication
+
+1 hour is a security vs UX balance.
+
+ Where to Store JWT (CRITICAL DECISION)
+localStorage
+
+JS accessible
+
+XSS = token stolen
+
+ sessionStorage
+
+same XSS problem
+
+ HTTP-only Cookies (BEST)
+
+Why cookies?
+
+not accessible via JS
+
+auto-sent with requests
+
+browser-managed
+
+mature security model
+
+ Why HTTP-Only Cookies Are Secure
+httpOnly: true
+
+
+Means:
+
+document.cookie 
+
+XSS cannot read token
+
+attacker JS is useless
+
+Even if JS is injected:
+
+token stays safe
+
+ Cookie Flags Explained (Security Model)
+secure
+
+only sent over HTTPS
+
+prevents MITM attacks
+
+sameSite
+
+protects against CSRF
+
+controls cross-site sending
+
+maxAge
+
+browser-side expiry
+
+matches JWT expiry
+
+Cookies are not dumb storage.
+They are a security system.
+
+ Auth Middleware (Why It Exists)
+
+Middleware centralizes auth logic.
+
+Instead of:
+
+checking token in every controller 
+
+We do:
+
+one middleware
+
+one source of truth
+
+Middleware:
+
+extracts token
+
+verifies JWT
+
+attaches user to request
+
+blocks unauthorized access
+
+ Why Auth Middleware Is NOT Global
+
+Global auth would:
+
+block login
+
+block signup
+
+block public routes
+
+Correct approach:
+
+Protect resources, not the entire app
+
+So:
+
+/auth/* → public
+
+/artifacts/* → protected
+ End-to-End Mental Flow (IMPORTANT)
+Signup
+password → bcrypt hash → DB
+
+Login
+password → bcrypt.compare → JWT issued
+
+Authenticated request
+cookie → JWT → middleware → req.user
+
+Protected resource
+req.user.id → ownership → DB access
+
+
+Everything connects logically.
