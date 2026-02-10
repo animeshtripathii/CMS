@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import authRoutes from "./routes/auth.route.js";
-// import artifactRoutes from "./routes/artifacts.route.js"
+import artifactRoutes from "./routes/artifact.route.js"
+
 import cookieParser from "cookie-parser";
 import { connect } from "mongoose";
 const app = express();
@@ -21,7 +22,7 @@ app.use(cookieParser());
 //   });
 // });
 app.use("/auth",authRoutes);
-// app.use("/artifacts", artifactRoutes);
+app.use("/artifacts", artifactRoutes);
 export default app;
 
 

@@ -3,6 +3,7 @@ import {
   verifySignupOtpService,
   loginService
 } from "../services/auth.service.js";
+import cookieParser from "cookie-parser";
 
 /**
  * POST /auth/signup/initiate
@@ -81,11 +82,17 @@ export const login = async (req, res) => {
     }
 
     const result = await loginService(email, password);
+    res.cookie("token", result.token, {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000 // 1 hour
+    });
 
     res.status(200).json({
       success: true,
       message: "Login successful",
-      ...result
+      user: result.user
     });
   } catch (error) {
     res.status(401).json({
