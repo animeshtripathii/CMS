@@ -6,7 +6,7 @@ This document explains the flow of the application in detail, covering routes, c
 
 The authentication module handles user signup (with OTP verification) and login.
 
-### **POST** `/auth/signup/initiate`
+### **POST** `/auth/signup/initiate` (Public)
 - **Goal:** Start the signup process by sending an OTP to the user's email.
 - **Controller:** `initiateSignup` (`controllers/auth.controller.js`)
   - Validates if `email` is present.
@@ -21,7 +21,7 @@ The authentication module handles user signup (with OTP verification) and login.
   - `generateOTP`: Generates a random 6-digit string.
   - `sendEmail`: Uses `nodemailer` to send the OTP.
 
-### **POST** `/auth/signup/verify`
+### **POST** `/auth/signup/verify` (Public)
 - **Goal:** Verify the OTP and create the user account.
 - **Controller:** `verifySignupOtp` (`controllers/auth.controller.js`)
   - Receives `email`, `otp`, and `password`.
@@ -34,7 +34,7 @@ The authentication module handles user signup (with OTP verification) and login.
   - Creates the new user in the DB (`User` model).
   - Deletes the used OTP.
 
-### **POST** `/auth/login`
+### **POST** `/auth/login` (Public)
 - **Goal:** Authenticate existing user and issue a JWT.
 - **Controller:** `login` (`controllers/auth.controller.js`)
   - Receives `email` and `password`.
@@ -51,7 +51,7 @@ The authentication module handles user signup (with OTP verification) and login.
 
 Handles the creation and retrieval of artifacts (posts/items).
 
-### **POST** `/artifacts`
+### **POST** `/artifacts` (Authenticated)
 - **Goal:** Create a new artifact.
 - **Middleware:** `authMiddleware`
   - checks `req.cookies.token`.
@@ -63,7 +63,7 @@ Handles the creation and retrieval of artifacts (posts/items).
 - **Service:** `createArtifactService` (`services/artifacts.services.js`)
   - Creates a new document in `Artifacts` collection with the author set to the current user.
 
-### **GET** `/artifacts`
+### **GET** `/artifacts` (Authenticated)
 - **Goal:** Retrieve artifacts based on permissions.
 - **Middleware:**
   1. `authMiddleware`: Ensures user is logged in.
@@ -82,7 +82,7 @@ Handles the creation and retrieval of artifacts (posts/items).
 
 Handles toggling likes on artifacts.
 
-### **POST** `/likes/toggle/:id`
+### **POST** `/likes/toggle/:id` (Authenticated)
 - **Goal:** Like or unlike a specific artifact.
 - **Middleware:** `authMiddleware` (Ensures user is logged in).
 - **Controller:** `toggleLike` (`controllers/like.controller.js`)
