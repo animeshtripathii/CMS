@@ -4,10 +4,15 @@ import morgan from "morgan";
 import authRoutes from "./routes/auth.route.js";
 import artifactRoutes from "./routes/artifact.route.js"
 import likeRoutes from "./routes/like.route.js";
+import { testingCron } from "./cron/testing.js";
+import { archiveOldDraftsCron } from "./cron/archiveArtifacts.js";
 
 import cookieParser from "cookie-parser";
 import { connect } from "mongoose";
 const app = express();
+
+// testingCron();
+archiveOldDraftsCron();
 
 /* Middlewares */
 app.use(cors());

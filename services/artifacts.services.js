@@ -1,6 +1,5 @@
 import Artifacts from "../models/artifact.js";
 import fs from "fs";
-// FIX: Point this to the correct relative path of your cloudinary.js file
 import cloudinary from '../config/cloudinary.js';
 
 export const createArtifactService = async ({
