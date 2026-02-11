@@ -16,12 +16,12 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
 app.use(cookieParser());
 /* Test Route */
-// app.get("/", (req, res) => {
-//   res.status(200).json({
-//     success: true,
-//     message: "CMS Backend is running"
-//   });
-// });
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "CMS Backend is running"
+  });
+});
 app.use("/auth",authRoutes);
 app.use("/artifacts", artifactRoutes);
 app.use("/likes", likeRoutes);
