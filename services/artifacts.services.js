@@ -12,3 +12,10 @@ export const createArtifactService = async ({
     });
     return artifact;    
 }
+
+export const getArtifactsService = async (userData) => {
+    if (userData.role === "VIEWER") {
+        return await Artifacts.find({ author: userData.id }).populate("author", "username email");
+    }
+    return await Artifacts.find().populate("author", "username email");
+}

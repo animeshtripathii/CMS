@@ -3,7 +3,7 @@ import {
   verifySignupOtpService,
   loginService
 } from "../services/auth.service.js";
-import cookieParser from "cookie-parser";
+import { sendEmail } from "../utils/sendMail.js";
 
 /**
  * POST /auth/signup/initiate
@@ -21,11 +21,25 @@ export const initiateSignup = async (req, res) => {
 
     const result = await initiateSignupService(email);
 
+    const emailResult = await sendEmail(email,result.otp,result.expiresIn);
+    
+    if (!emailResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: emailResult.message
+      });
+    }
     res.status(200).json({
       success: true,
-      message: "OTP generated successfully",
-      ...result
+      message: "OTP generated and email sent successfully",
     });
+
+
+    // res.status(200).json({
+    //   success: true,
+    //   message: "OTP generated successfully",
+    //   ...result
+    // });
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -88,7 +102,7 @@ export const login = async (req, res) => {
       sameSite: "lax",
       maxAge: 60 * 60 * 1000 // 1 hour
     });
-
+   
     res.status(200).json({
       success: true,
       message: "Login successful",
