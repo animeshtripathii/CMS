@@ -6,7 +6,7 @@ export const registerSocketHandler = (io) => {
 
     io.on("connection", (socket) => {
         console.log("User created: ", socket.id)
-
+      console.log("Online Users",socket.id)
         socket.on('user-online', (userId) => {
             onlineUsers.set(userId, socket.id);
 
@@ -16,6 +16,7 @@ export const registerSocketHandler = (io) => {
         socket.on("send-message", async (data) => {
             try {
                 const { senderId, receiverId, message } = data;
+                console.log(senderId, receiverId, message)
 
                 if (!senderId || !receiverId || !message) {
                     console.log("Invalid data")

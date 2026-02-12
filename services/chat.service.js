@@ -9,9 +9,9 @@ export const getChatByThreadService = async (threadId) => {
 };
 
 export const findOrCreateThreadService = async (userId1, userId2) => {
-    // FIX: Constructors mein 'new' keyword joda
     const id1 = new mongoose.Types.ObjectId(userId1);
     const id2 = new mongoose.Types.ObjectId(userId2);
+    console.log("Finding thread for users:", id1, id2)
 
     let thread = await Thread.findOne({
         participants: { $all: [id1, id2], $size: 2 }
@@ -26,11 +26,11 @@ export const findOrCreateThreadService = async (userId1, userId2) => {
 };
 
 export const sendChatService = async ({ senderId, receiverId, message }) => {
-    // FIX: Constructors mein 'new' keyword joda
     const sId = new mongoose.Types.ObjectId(senderId);
     const rId = new mongoose.Types.ObjectId(receiverId);
 
     const thread = await findOrCreateThreadService(sId, rId);
+    console.log("Using thread:", thread)
 
     const newChat = await Chat.create({
         thread: thread._id,
