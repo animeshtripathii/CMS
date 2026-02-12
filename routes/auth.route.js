@@ -7,9 +7,6 @@ import {
 
 const router = express.Router();
 
-/**
- * REGISTRATION PROCESS
- */
 
 // Step 1: Start signup (create OTP)
 router.post("/signup/initiate", initiateSignup);
