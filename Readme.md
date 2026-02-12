@@ -53,15 +53,17 @@ Handles the creation and retrieval of artifacts (posts/items).
 
 ### **POST** `/artifacts` (Authenticated)
 - **Goal:** Create a new artifact.
-- **Middleware:** `authMiddleware`
-  - checks `req.cookies.token`.
-  - Verify token with `jwt.verify`.
-  - Attaches decoded user to `req.user`.
+- **Middleware:** 
+  1. `authMiddleware`: Verify token.
+  2. `upload.single("file")`: Handle file upload using Multer.
 - **Controller:** `createArtifact` (`controllers/artifact.controller.js`)
   - Extracts `title`, `content` from body and `userId` from `req.user`.
+  - Passes file information (if any) to service.
   - Calls `createArtifactService`.
 - **Service:** `createArtifactService` (`services/artifacts.services.js`)
-  - Creates a new document in `Artifacts` collection with the author set to the current user.
+  - **Phase 1:** Uploads local file to **Cloudinary**.
+  - **Phase 2:** Removes temporary local file.
+  - **Phase 3:** Creates a new document in `Artifacts` collection with the Cloudinary URL.
 
 ### **GET** `/artifacts` (Authenticated)
 - **Goal:** Retrieve artifacts based on permissions.
@@ -97,6 +99,56 @@ Handles toggling likes on artifacts.
 
 ---
 
+## 4. Chat Module (`/chat`)
+
+Handles messaging between users (backed by Socket.io for real-time).
+
+### **POST** `/chat` (Authenticated)
+- **Goal:** Send a new message via HTTP.
+- **Middleware:** `authMiddleware`.
+- **Controller:** `sendChat` (`controllers/chat.controller.js`)
+  - Validates `receiverId` and `message`.
+  - Calls `sendChatService`.
+- **Service:** `sendChatService` (`services/chat.service.js`)
+  - Finds or creates a `Thread` between sender and receiver.
+  - Saves the message in `Chat` collection.
+  - Updates `lastMessage` in the `Thread`.
+
+### **GET** `/chat/:threadId` (Authenticated)
+- **Goal:** Fetch conversation history.
+- **Controller:** `getChatByThread` (`controllers/chat.controller.js`)
+  - Calls `getChatByThreadService` with `threadId`.
+- **Service:** `getChatByThreadService` (`services/chat.service.js`)
+  - Returns messages for the thread, populated with sender details.
+
+---
+
+## 5. Webhook Module (`/webhook`)
+
+Handles external callbacks.
+
+### **POST** `/webhook/test` (Public)
+- **Goal:** Receives webhook events (e.g., from GitHub).
+- **Controller:** Inline handler in `webhook/webhook.js`.
+  - Logs the payload and returns success status.
+
+---
+
+## 6. Cron Jobs & Automation
+
+Automated background tasks using `node-cron`.
+
+### **Archive Old Drafts**
+- **File:** `cron/archiveArtifacts.js`
+- **Schedule:** Daily at 00:00 (Midnight).
+- **Goal:** Maintain database hygiene.
+- **Logic:**
+  - Finds artifacts with status `DRAFT`.
+  - Checks if created more than 30 days ago.
+  - Updates status to `ARCHIVED`.
+
+---
+
 # Project Summary
 
 This project is a robust and modular Express.js backend application designed to handle:
@@ -104,12 +156,18 @@ This project is a robust and modular Express.js backend application designed to 
 1.  **Secure Authentication**: Using OTP-based email verification for signup and JWT (JSON Web Tokens) for managing user sessions via HTTP-only cookies.
 2.  **Artifact Management**: Allowing users to create content ("artifacts") and view them based on role-based access control (RBAC). Admin users can view all content, while Viewers can only manage their own.
 3.  **Social Interaction**: Implementing a "Like" system that allows users to toggle likes on artifacts, demonstrating handling of relational data and counters in MongoDB.
+4.  **Real-time Chat**: One-to-one messaging using **Socket.io** and HTTP fallbacks, organized into threads.
+5.  **Media Handling**: Integration with **Cloudinary** for storing artifact attachments (images/PDFs).
+6.  **Automation**: Background Cron jobs for maintenance tasks like archiving old drafts.
 
 **Key Technologies:**
 -   **Node.js & Express**: Core server framework.
 -   **MongoDB & Mongoose**: Database and ODM for schema modeling.
 -   **JWT & Bcrypt**: For authentication and security.
 -   **Nodemailer**: For sending transactional emails (OTPs).
+-   **Socket.io**: Real-time bidirectional event-based communication.
+-   **Cloudinary / Multer**: Cloud file storage and multipart form handling.
+-   **Node-Cron**: Task scheduling.
 
 The architecture follows a clean **Controller-Service** pattern, ensuring separation of concerns:
 -   **Controllers** handle HTTP requests and responses.
