@@ -113,6 +113,7 @@ Handles messaging between users (backed by Socket.io for real-time).
   - Finds or creates a `Thread` between sender and receiver.
   - Saves the message in `Chat` collection.
   - Updates `lastMessage` in the `Thread`.
+  - **★ Update (Name Visibility):** This service now fetches the saved chat message and explicitly populates the `sender` field (specifically the `name` property) before returning it. This ensures that when the message is emitted via Socket.io or returned in the API response, the sender's name is immediately available for display in the frontend UI.
 
 ### **GET** `/chat/:threadId` (Authenticated)
 - **Goal:** Fetch conversation history.
@@ -173,4 +174,15 @@ The architecture follows a clean **Controller-Service** pattern, ensuring separa
 -   **Controllers** handle HTTP requests and responses.
 -   **Services** contain the core business logic.
 -   **Models** define the data structure.
+
+---
+
+## ★ IMPORTANT UPDATE: REAL-TIME SENDER NAME VISIBILITY
+**PROBLEM:** Previously, when a message was sent, only the `senderId` was available in the response. This caused the sender's name to be missing in the real-time chat UI until the page was refreshed.
+
+**SOLUTION:** The `sendChatService` has been updated to **EXPLICITLY POPULATE** the `sender` field (specifically the `name`) immediately after saving the message.
+
+**RESULT:**
+- The API response and Socket.io event now contain the **FULL USER OBJECT** (including `name`).
+- The Frontend can **INSTANTLY DISPLAY** the sender's name ("You" or "Them") without reloading.
 

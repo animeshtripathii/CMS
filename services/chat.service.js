@@ -29,7 +29,7 @@ export const findOrCreateThreadService = async (userId1, userId2) => {
 
 
 export const sendChatService = async ({ senderId, receiverId, message }) => {
-    const sId = new mongoose.Types.ObjectId(senderId); // Added 'new'
+    const sId = new mongoose.Types.ObjectId(senderId); 
     const rId = new mongoose.Types.ObjectId(receiverId);
 
     const thread = await findOrCreateThreadService(sId, rId);
