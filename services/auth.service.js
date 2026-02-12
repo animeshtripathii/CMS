@@ -4,22 +4,22 @@ import OTP from "../models/otp.js";
 import { generateOTP } from "../utils/generateOtp.js";
 import jwt from "jsonwebtoken";
 /**
- * Initiate signup by generating OTP
+ * Begin registration process by creating a One-Time Password
  */
 export const initiateSignupService = async (email) => {
-  // 1. Check if user already exists
+  // Verify if the user account is already present
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new Error("User already exists");
   }
 
-  // 2. Remove old OTPs
+  // Delete any existing OTP records for this email
   await OTP.deleteMany({ email });
 
-  // 3. Generate OTP
+  // Create a new OTP code
   const otp = generateOTP();
 
-  // 4. Store OTP (hashed by pre-save middleware)
+  // Save the OTP to the database (hashing handled by middleware)
   await OTP.create({
     email,
     otp,
@@ -33,7 +33,7 @@ export const initiateSignupService = async (email) => {
 };
 
 /**
- * Verify OTP and create user
+ * Authenticate OTP and finalize user creation
  */
 export const verifySignupOtpService = async ({
   email,
@@ -42,25 +42,25 @@ export const verifySignupOtpService = async ({
   password,
   role,
 }) => {
-  // 1. Fetch OTP
+  // Retrieve the OTP record associated with the email
   const otpRecord = await OTP.findOne({ email });
   if (!otpRecord) {
     throw new Error("OTP expired or not found");
   }
 
-  // 2. Check expiry
+  // Validate if the OTP is still within its validity period
   if (otpRecord.expiresAt < Date.now()) {
     await OTP.deleteOne({ email });
     throw new Error("OTP expired");
   }
 
-  // 3. Verify OTP
+  // Compare the provided OTP with the stored hash
   const isValidOtp = await bcrypt.compare(otp, otpRecord.otp);
   if (!isValidOtp) {
     throw new Error("Invalid OTP");
   }
 
-  // 4. Create user (password hashed via pre-save middleware)
+  // Register the new user (password is automatically hashed)
   const user = await User.create({
     name,
     email,
@@ -68,7 +68,7 @@ export const verifySignupOtpService = async ({
     role,
   });
 
-  // 5. Destroy OTP (one-time use)
+  // Invalidate the OTP after successful use
   await OTP.deleteOne({ email });
 
   return {

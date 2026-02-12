@@ -1,5 +1,5 @@
-// roles.middleware.js
-// Middleware to authorize user roles
+// Role Authorization Middleware
+// Checks if the user has one of the permitted roles
 
 export function authorizeRoles(...allowedRoles) { 
   return (req, res, next) => {

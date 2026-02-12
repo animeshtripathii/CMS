@@ -4,7 +4,7 @@ import Artifact from "../models/artifact.js";
 export const archiveOldDraftsCron = () => {
   console.log("Archive old drafts cron job initialized");
   
-  // Run every day at midnight (00:00)
+  // Scheduled task set to execute daily at 00:00 hours
   cron.schedule("0 0 * * *", async () => {
     try {
       console.log("Running archive old drafts cron job...");

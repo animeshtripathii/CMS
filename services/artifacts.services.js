@@ -13,7 +13,7 @@ export const createArtifactService = async ({
 
     if (filePath) {
         try {
-            // STEP 1: Upload the local file to Cloudinary
+            // Phase 1: Transmit local file to cloud storage
             const uploadResult = await cloudinary.uploader.upload(filePath, {
                 folder: "cms-artifacts",
                 resource_type: "auto" 
@@ -21,18 +21,18 @@ export const createArtifactService = async ({
             
             mediaUrl = uploadResult.secure_url;
             
-            // STEP 2: DELETE the local file from /uploads after success
+            // Phase 2: Remove temporary local file upon successful upload
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
             }
         } catch (error) {
-            // Clean up local file even if Cloudinary fails
+            // Ensure local file cleanup in case of upload failure
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             throw new Error("Cloudinary Upload Failed: " + error.message);
         }
     }
 
-    // STEP 3: Save the CLOUDINARY URL to MongoDB, not the local path
+    // Phase 3: Persist the cloud URL in the database instead of the local path
     const artifact = await Artifacts.create({
         title,
         content,

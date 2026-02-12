@@ -1,7 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 
-/*storage configuration*/
+/* Configure storage settings for uploaded files */
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 });
 
 
-/**file type validation */
+/** Validate the MIME type of the uploaded file */
 
    const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
@@ -26,6 +26,6 @@ const storage = multer.diskStorage({
 export const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 } // Restrict file size to a maximum of 5 megabytes
 });
 

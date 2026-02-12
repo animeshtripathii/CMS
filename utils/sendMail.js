@@ -27,7 +27,7 @@ export const sendEmail = async (email, otp, expiresIn) => {
                    </div>`,
         };
 
-        // Await the promise instead of using a callback
+        // asynchronous execution of mail sending
         const info = await transporter.sendMail(mailOptions);
         
         console.log('Message sent successfully! ID:', info.messageId);

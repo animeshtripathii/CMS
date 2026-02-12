@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
-      select: false // 🔥 never expose password hash
+      select: false // By default, exclude the password field from query results
     },
     role: {
       type: String,
@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
 
 
 userSchema.pre("save", async function (next) {
-  // Only hash if password is new or modified
+  // Perform hashing only if the password field has been updated
   if (!this.isModified("password")) return next();
 
   const saltRounds = 10;

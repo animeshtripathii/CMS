@@ -8,13 +8,13 @@ import {
 const router = express.Router();
 
 /**
- * SIGNUP FLOW
+ * REGISTRATION PROCESS
  */
 
-// Step 1: Initiate signup (generate OTP)
+// Step 1: Start signup (create OTP)
 router.post("/signup/initiate", initiateSignup);
 
-// Step 2: Verify OTP and create user
+// Step 2: Authenticate OTP and register user
 router.post("/signup/verify", verifySignupOtp);
 router.post("/login", login);
 

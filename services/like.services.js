@@ -20,12 +20,3 @@ export const togglelikeService=async({userId,artifactId})=>{
         return {liked:false, error:error.message};
     }
 }
-// export const getlikeCountServuce=async(artifactId)=>{
-//     try{
-//         const likeCount= await Like.countDocuments({artifact:artifactId});
-//         return likeCount;
-//     }
-//     catch(error){
-//         return 0;
-//     }
-// }

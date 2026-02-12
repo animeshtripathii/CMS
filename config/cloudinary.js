@@ -1,4 +1,4 @@
-// cloudinary.js
+// Cloudinary Configuration File
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -9,4 +9,4 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-export default cloudinary; // Export the configured instance
+export default cloudinary; // Default export of the initialized cloudinary object
