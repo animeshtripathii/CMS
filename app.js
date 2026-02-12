@@ -7,7 +7,7 @@ import likeRoutes from "./routes/like.route.js";
 import { testingCron } from "./cron/testing.js";
 import { archiveOldDraftsCron } from "./cron/archiveArtifacts.js";
 import webhookRoutes from "./webhook/webhook.js";
-
+import chatRouter from "./routes/chat.route.js"
 import cookieParser from "cookie-parser";
 import { connect } from "mongoose";
 const app = express();
@@ -28,6 +28,7 @@ app.get("/", (req, res) => {
     message: "CMS Backend is running"
   });
 });
+app.use("/chat",chatRouter)
 app.use("/webhook",webhookRoutes);
 app.use("/auth",authRoutes);
 app.use("/artifacts", artifactRoutes);
