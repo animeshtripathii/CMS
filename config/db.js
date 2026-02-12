@@ -4,7 +4,7 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    mongoose.set("runValidators", true); // Enforce schema validation on updates
+    mongoose.set("runValidators", true); // Updates par schema validation enforce karein
 
     await mongoose.connect(process.env.MONGO_URI);
 

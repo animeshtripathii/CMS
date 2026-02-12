@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
-      select: false // By default, exclude the password field from query results
+      select: false // Default roop se, query results mein password field shamil na karein
     },
     role: {
       type: String,
@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
 
 
 userSchema.pre("save", async function (next) {
-  // Perform hashing only if the password field has been updated
+  // Hashing tabhi karein jab password field update hua ho
   if (!this.isModified("password")) return next();
 
   const saltRounds = 10;

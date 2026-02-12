@@ -33,6 +33,7 @@ export const initiateSignup = async (req, res) => {
     });
 
 
+    // Yahan pehle OTP generation ka response bheja ja raha tha
     // res.status(200).json({
     //   success: true,
     //   message: "OTP generated successfully",
@@ -96,7 +97,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: false, 
       sameSite: "lax",
-      maxAge: 60 * 60 * 1000 // 1 hour
+      maxAge: 60 * 60 * 1000 // 1 ghanta
     });
    
     res.status(200).json({

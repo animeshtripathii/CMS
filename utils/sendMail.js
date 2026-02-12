@@ -27,7 +27,7 @@ export const sendEmail = async (email, otp, expiresIn) => {
                    </div>`,
         };
 
-        // asynchronous execution of mail sending
+        // Mail bhejne ka asynchronous execution
         const info = await transporter.sendMail(mailOptions);
         
         console.log('Message sent successfully! ID:', info.messageId);

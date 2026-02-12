@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket Chat</title>
+</head>
+
+<body>
+
+    <h2>Simple Chat</h2>
+
+    <div>
+        <input id="senderId" placeholder="Your User ID" />
+        <input id="receiverId" placeholder="Receiver User ID" />
+    </div>
+
+    <br>
+
+    <div>
+        <input id="message" placeholder="Type message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <br>
+
+    <h3>Messages</h3>
+    <ul id="messages"></ul>
+
+
+    <!-- Socket.IO Client CDN -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script>
+        //  Backend se connect karo
+        // Agar ngrok ya deployed server use kar rahe ho to URL change karo
+        const socket = io("http://localhost:3000");
+
+        // Jab connected ho jaye
+        socket.on("connect", () => {
+            console.log("Connected:", socket.id);
+        });
+
+        // User ko online mark karo
+        document.getElementById("senderId").addEventListener("change", () => {
+            const userId = document.getElementById("senderId").value;
+            socket.emit("user-online", userId);
+        });
+
+        //  Message bhejo
+        function sendMessage() {
+            const senderId = document.getElementById("senderId").value;
+            const receiverId = document.getElementById("receiverId").value;
+            const message = document.getElementById("message").value;
+
+            socket.emit("send-message", {
+                senderId,
+                receiverId,
+                message
+            });
+
+            // UI mein message ko turant add karo
+            const li = document.createElement("li");
+            li.textContent = `You: ${message}`;
+            document.getElementById("messages").appendChild(li);
+
+            document.getElementById("message").value = "";
+        }
+
+        //  Message receive karo
+        socket.on("receive-message", (chat) => {
+            const li = document.createElement("li");
+            li.textContent = `${chat.sender}: ${chat.message}`;
+            document.getElementById("messages").appendChild(li);
+        });
+    </script>
+
+</body>
+
+</html>

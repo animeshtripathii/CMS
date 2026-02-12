@@ -4,22 +4,22 @@ import OTP from "../models/otp.js";
 import { generateOTP } from "../utils/generateOtp.js";
 import jwt from "jsonwebtoken";
 /**
- * Begin registration process by creating a One-Time Password
+ * One-Time Password banakar registration process shuru karein
  */
 export const initiateSignupService = async (email) => {
-  // Verify if the user account is already present
+  // Verify karein ki user account pehle se maujood hai ya nahi
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new Error("User already exists");
   }
 
-  // Delete any existing OTP records for this email
+  // Is email ke liye koi bhi maujooda OTP records delete karein
   await OTP.deleteMany({ email });
 
-  // Create a new OTP code
+  // Naya OTP code banayein
   const otp = generateOTP();
 
-  // Save the OTP to the database (hashing handled by middleware)
+  // OTP ko database mein save karein (hashing middleware dwara handle ki gayi hai)
   await OTP.create({
     email,
     otp,
@@ -33,7 +33,7 @@ export const initiateSignupService = async (email) => {
 };
 
 /**
- * Authenticate OTP and finalize user creation
+ * OTP authenticate karein aur user creation ko finalize karein
  */
 export const verifySignupOtpService = async ({
   email,
@@ -42,25 +42,25 @@ export const verifySignupOtpService = async ({
   password,
   role,
 }) => {
-  // Retrieve the OTP record associated with the email
+  // Email se juda OTP record retrieve karein
   const otpRecord = await OTP.findOne({ email });
   if (!otpRecord) {
     throw new Error("OTP expired or not found");
   }
 
-  // Validate if the OTP is still within its validity period
+  // Validate karein ki OTP abhi bhi validity period mein hai ya nahi
   if (otpRecord.expiresAt < Date.now()) {
     await OTP.deleteOne({ email });
     throw new Error("OTP expired");
   }
 
-  // Compare the provided OTP with the stored hash
+  // Diye gaye OTP ko stored hash ke saath compare karein
   const isValidOtp = await bcrypt.compare(otp, otpRecord.otp);
   if (!isValidOtp) {
     throw new Error("Invalid OTP");
   }
 
-  // Register the new user (password is automatically hashed)
+  // Naye user ko register karein (password automatically hash ho jata hai)
   const user = await User.create({
     name,
     email,
@@ -68,7 +68,7 @@ export const verifySignupOtpService = async ({
     role,
   });
 
-  // Invalidate the OTP after successful use
+  // Safal upyog ke baad OTP ko invalidate karein
   await OTP.deleteOne({ email });
 
   return {

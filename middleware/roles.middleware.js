@@ -1,5 +1,5 @@
-// Role Authorization Middleware
-// Checks if the user has one of the permitted roles
+// Role Authorization ke liye Middleware
+// Check karta hai ki user ke paas permitted roles mein se ek hai ya nahi
 
 export function authorizeRoles(...allowedRoles) { 
   return (req, res, next) => {

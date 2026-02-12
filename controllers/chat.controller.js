@@ -4,15 +4,15 @@ import {
 } from "../services/chat.service.js";
 
 /**
- * Controller to send a new message
- * Logic handles finding/creating a thread and saving the message
+ * Naya message bhejne ke liye Controller
+ * Logic thread dhundne/banane aur message save karne ko handle karta hai
  */
 export const sendChat = async (req, res) => {
     try {
         const { receiverId, message } = req.body;
         console.log("receiverId", receiverId)
         console.log("message", message)
-        const senderId = req.user.id; // Populated by your authMiddleware
+        const senderId = req.user.id; // AuthMiddleware dwara populate kiya gaya
 console.log("senderId", senderId)
         if (!receiverId || !message) {
             return res.status(400).json({
@@ -40,8 +40,8 @@ console.log("senderId", senderId)
 };
 
 /**
- * Controller to fetch all messages in a specific thread
- * Useful for opening a chat window
+ * Ek specific thread ke sabhi messages laane ke liye Controller
+ * Chat window open karne ke liye upyogi
  */
 export const getChatByThread = async (req, res) => {
     try {

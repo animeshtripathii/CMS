@@ -19,7 +19,7 @@ const otpSchema = new mongoose.Schema(
 );
 
 otpSchema.pre("save", async function (next) {
-  // Check if the OTP has been modified to avoid duplicate hashing
+  // OTP update hua hai ya nahi yeh dekhein taaki duplicate hashing se bacha ja sake
   if (!this.isModified("otp")) return next();
 
   const saltRounds = 10;
