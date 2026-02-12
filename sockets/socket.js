@@ -1,54 +1,72 @@
-import { sendChatService } from "../services/chat.service.js"
+import { sendChatService, findOrCreateThreadService, getChatByThreadService } from "../services/chat.service.js";
 
 export const registerSocketHandler = (io) => {
-    const onlineUsers = new Map(); // Online users ko track karne ke liye memory map
+    const onlineUsers = new Map();
 
     io.on("connection", (socket) => {
-        console.log("Naya banda connect hua: ", socket.id);
+        console.log("Connected:", socket.id);
 
-        // Jab user login kare toh uska ID aur Socket ID map mein save karo
+        // 1. User Online Logic
         socket.on('user-online', (userId) => {
             onlineUsers.set(userId, socket.id);
-            console.log("Abhi ye users online hain:", Array.from(onlineUsers.keys()));
+            socket.userId = userId; 
         });
 
-        // Message bhejne ka main logic
-        socket.on("send-message", async (data) => {
+        // 2. FEATURE: JOIN ROOM (Thread Logic)
+        socket.on("join-chat", async ({ senderId, receiverId }) => {
             try {
-                const { senderId, receiverId, message } = data;
+                // Thread dhundo
+                const thread = await findOrCreateThreadService(senderId, receiverId);
+                const threadId = thread._id.toString();
 
-                if (!senderId || !receiverId || !message) return;
-
-                // Service ko call karke message DB mein save karo
-                // Humne service mein hi .populate("sender") laga diya hai
-                const chat = await sendChatService({ senderId, receiverId, message });
-                console.log("Naya message save hua:", chat);
-
-                // Receiver ka socket ID dhundo
-                const receiverSocketId = onlineUsers.get(receiverId);
+                // Socket ko Room mein join karao
+                socket.join(threadId);
                 
-                if (receiverSocketId) {
-                    // Agar receiver online hai, toh use pura 'chat' object bhejo (naam ke saath)
-                    io.to(receiverSocketId).emit("receive-message", chat);
-                }
-                
-                // Jisne message bheja hai (aapko), use confirmation bhejo
-                socket.emit("message-sent", chat);
+                // Frontend ko batao ki room join ho gaya
+                socket.emit("room-joined", { threadId: threadId });
+
+                // Purani History bhejo
+                const messages = await getChatByThreadService(threadId);
+                socket.emit("history-response", messages);
 
             } catch (error) {
-                console.log("Message bhejne mein error aaya:", error);
+                console.error("Join Error:", error);
             }
         });
 
-        // Jab user tab close kare ya disconnect ho jaye
-        socket.on("disconnect", () => {
-            for (let [user, socketId] of onlineUsers.entries()) {
-                if (socketId === socket.id) {
-                    onlineUsers.delete(user);
-                    console.log("User offline gaya: ", user);
-                    break;
+        // 3. FEATURE: SEND MESSAGE (Room Based)
+        socket.on("send-message", async (data) => {
+            try {
+                let { senderId, receiverId, message, threadId } = data;
+
+                // Agar threadId nahi aayi, to DB se nikalo
+                if (!threadId) {
+                    const thread = await findOrCreateThreadService(senderId, receiverId);
+                    threadId = thread._id.toString();
                 }
+
+                // Message Save karo
+                const chat = await sendChatService({ senderId, receiverId, message });
+
+                // Sirf us Room (Thread) walon ko message bhejo
+                io.to(threadId).emit("receive-message", chat);
+
+            } catch (error) {
+                console.log("Message Error:", error);
             }
+        });
+
+        // 4. FEATURE: TYPING INDICATOR
+        socket.on("typing", ({ threadId }) => {
+            if(threadId) socket.to(threadId).emit("display-typing");
+        });
+
+        socket.on("stop-typing", ({ threadId }) => {
+            if(threadId) socket.to(threadId).emit("hide-typing");
+        });
+
+        socket.on("disconnect", () => {
+            if (socket.userId) onlineUsers.delete(socket.userId);
         });
     });
 }

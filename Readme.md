@@ -185,4 +185,31 @@ The architecture follows a clean **Controller-Service** pattern, ensuring separa
 **RESULT:**
 - The API response and Socket.io event now contain the **FULL USER OBJECT** (including `name`).
 - The Frontend can **INSTANTLY DISPLAY** the sender's name ("You" or "Them") without reloading.
+--
+## CMS CHAT MODULE - FEATURES & LOGIC (English Guide)
+
+### 1. IMPLEMENTED FEATURES
+- [x] **Real-time Messaging:** Instant communication using Socket.io.
+- [x] **Database Persistence:** All messages are saved in MongoDB so they persist after refresh.
+- [x] **User Identification:** User's real 'Name' and 'Email' are displayed instead of ID.
+- [x] **Chat History:** Previous chats are loaded when the user returns.
+- [x] **Typing Indicator:** "Friend is typing..." feature added.
+- [x] **Room-Based Architecture:** Thread/Room logic used for private conversations.
+- [x] **Auto-Scroll:** Chat automatically scrolls down when a new message arrives.
+- [x] **Sanitized UI:** Distinct color bubbles for 'You' (Blue) and 'Friend' (Gray).
+
+### 2. THREAD / ROOM LOGIC EXPLAINED (Why Room Logic?)
+**Question:** Why did we use Room Logic?
+**Answer:** Previously, we were sending messages to the user's Socket ID. However, if a user has multiple tabs open, or if we want to create a group chat, Socket ID fails. Therefore, we made the "Thread ID" the "Room Name".
+
+**How It Works (Step-by-Step):**
+1. **JOIN:** When User A and User B want to chat, we check the backend to see if a Thread exists between them in the database (`findOrCreateThreadService`).
+2. **SOCKET JOIN:** With the found Thread ID (e.g., "thread_123"), we join User A's socket to it: `socket.join("thread_123")`.
+3. **EMIT:** When a message is sent, the server doesn't look for User B's specific location. It simply broadcasts to that "Room": `io.to("thread_123").emit(...)`.
+   This ensures everyone in that room (A and B) receives the message.
+
+### 3. FILE CHANGES SUMMARY
+- `socket.js`: Added 'join-chat' event and used `io.to(threadId)` for sending messages.
+- `chat.html`: Created `joinChat()` function and implemented waiting for 'room-joined' event.
+- `chat.service.js`: Populated `name` and `email` fields so names are displayed.
 

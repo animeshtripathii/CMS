@@ -5,7 +5,6 @@ import {Server} from "socket.io"
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import http from "http";
-import cloudinary from "./config/cloudinary.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -15,7 +14,7 @@ const server=http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: "*", // Testing ke liye sabhi origins allow hai, production mein adjust karein
-        credentials: true // credential true ka matlab hai ki requests ke saath cookies bhejna allowed hai
+        credentials: false // credential true ka matlab hai ki requests ke saath cookies bhejna allowed hai
     }
 });
 // Registration ke liye socket logic

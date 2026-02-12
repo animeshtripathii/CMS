@@ -3,97 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMS Socket Chat</title>
+    <title>CMS Advanced Chat</title>
     <style>
-        /* Basic styling for chat look and feel */
         body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
         .chat-container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         #messages { list-style: none; height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; }
-        .msg { padding: 8px 12px; margin: 5px; border-radius: 8px; max-width: 70%; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: #dcf8c6; } /* Aapka message right mein */
-        .received { align-self: flex-start; background: #fff; border: 1px solid #ddd; } /* Doosre ka left mein */
+        .msg { padding: 8px 12px; margin: 5px; border-radius: 8px; max-width: 75%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #dcf8c6; } 
+        .received { align-self: flex-start; background: #fff; border: 1px solid #ddd; }
         .user-label { font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 2px; color: #555; }
-        input { width: 70%; padding: 8px; }
-        button { padding: 8px 15px; cursor: pointer; background: #007bff; color: white; border: none; }
+        .typing { font-size: 0.8em; color: #888; font-style: italic; height: 15px; margin-bottom: 5px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="chat-container">
-    <h2>Chat App</h2>
-    <input id="myId" placeholder="Apna User ID dalo" />
-    <button onclick="register()">Login</button>
-    <hr style="margin: 15px 0;">
+    <h2>Chat App Pro</h2>
+    
+    <div class="row">
+        <input id="myId" placeholder="Apna User ID dalo" style="flex:1;" />
+        <button onclick="register()">Login</button>
+    </div>
+    <hr>
 
-    <input id="toId" placeholder="Receiver ki ID dalo" />
+    <div class="row">
+        <input id="toId" placeholder="Dost ka ID dalo" style="flex:1;" />
+        <button onclick="joinChat()" style="background: #28a745;">Start Chat</button>
+    </div>
+
     <ul id="messages"></ul>
-    <input id="msgInput" placeholder="Message likho..." />
-    <button onclick="send()">Send</button>
+    
+    <div id="typingIndicator" class="typing"></div>
+
+    <div class="row">
+        <input id="msgInput" placeholder="Message likho..." style="flex:1;" oninput="handleTyping()" />
+        <button onclick="send()">Send</button>
+    </div>
 </div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
-    const socket = io("https://charlize-heterogenetic-lauri.ngrok-free.dev");
+    // Aapka Ngrok URL wahi rakha hai
+    const socket = io("http://localhost:3000", {
+        transports: ["websocket"]
+    });
 
-function register() {
+    let currentThreadId = null; // Room ID save karne ke liye
+    let typingTimer;
+
+    function register() {
         const id = document.getElementById("myId").value;
         if (id) {
-            // Server ko batana ki ye user online hai
             socket.emit("user-online", id);
-            alert("Ab aap online hain!");
+            alert("Login Successful!");
         } else {
-            alert("Pehle apni ID toh dalo!");
+            alert("ID required!");
         }
     }
 
-    // UI mein message bubble add karne ka function
-    function addBubble(name, text, type) {
+    // FEATURE: JOIN ROOM & LOAD HISTORY
+    function joinChat() {
+        const sId = document.getElementById("myId").value;
+        const rId = document.getElementById("toId").value;
+        
+        if (!sId || !rId) return alert("Dono IDs dalo!");
+
+        document.getElementById("messages").innerHTML = ""; // Screen saaf karo
+        
+        // Server ko bolo Room join karaye
+        socket.emit("join-chat", { senderId: sId, receiverId: rId });
+    }
+
+    // LISTENER: Room Join Confirmation
+    socket.on("room-joined", (data) => {
+        console.log("Joined Room:", data.threadId);
+        currentThreadId = data.threadId; // ID save kar lo message bhejne ke liye
+    });
+
+    // LISTENER: History Load
+    socket.on("history-response", (messages) => {
+        messages.forEach(chat => displayMessage(chat));
+    });
+
+    // LISTENER: Receive Message
+    socket.on("receive-message", (chat) => {
+        displayMessage(chat);
+        // Message aate hi typing hata do
+        document.getElementById("typingIndicator").innerText = "";
+    });
+
+    // HELPER: Display Bubble
+    function displayMessage(chat) {
         const list = document.getElementById("messages");
         const li = document.createElement("li");
+        const myId = document.getElementById("myId").value;
+        
+        // Sender check karo
+        const sId = (typeof chat.sender === 'object') ? chat.sender._id : chat.sender;
+        const type = (sId === myId) ? 'sent' : 'received';
+        
+        // Name logic
+        let name = "You";
+        if (type === 'received') {
+            name = (chat.sender.name) ? chat.sender.name : (chat.sender.email || "Friend");
+        }
+
         li.className = `msg ${type}`;
-        
-        // Agar naam 'You' nahi hai, toh check karo ki name string hai ya object
-        const finalName = (type === 'sent') ? "You" : name;
-        
-        li.innerHTML = `<span class="user-label">${finalName}</span> ${text}`;
+        li.innerHTML = `<span class="user-label">${name}</span> ${chat.message}`;
         list.appendChild(li);
         list.scrollTop = list.scrollHeight;
     }
 
-    // Jab aap message bhejte ho aur server save kar leta hai
-    socket.on("message-sent", (chat) => {
-        // Aapke liye hamesha "You" dikhayega
-        addBubble("You", chat.message, "sent");
-    });
-
-    // Jab doosra banda aapko message bhejta hai
-    socket.on("receive-message", (chat) => {
-        console.log("Server se data aaya:", chat);
-        
-        // IMPORTANT: Humne backend mein populate kiya hai, toh sender ab ek object hai
-        // Agar chat.sender.username hai toh wo dikhao, varna ID dikhao
-        let senderName = "Other";
-        
-        if (chat.sender && typeof chat.sender.name) {
-            senderName = chat.sender.name || "Unknown User";
-        } else {
-            senderName = chat.sender; // Agar sirf ID aayi ho
-        }
-        
-        addBubble(senderName, chat.message, "received");
-    });
-
-    // Send button click logic
+    // FEATURE: SEND MESSAGE
     function send() {
+        const msg = document.getElementById("msgInput").value;
         const sId = document.getElementById("myId").value;
         const rId = document.getElementById("toId").value;
-        const msg = document.getElementById("msgInput").value;
+
         if(msg.trim()) {
-            socket.emit("send-message", { senderId: sId, receiverId: rId, message: msg });
+            // Thread ID bhi bhej rahe hain taaki room mein jaye
+            socket.emit("send-message", { 
+                senderId: sId, 
+                receiverId: rId, 
+                message: msg,
+                threadId: currentThreadId 
+            });
             document.getElementById("msgInput").value = "";
+            
+            // Typing band karo
+            socket.emit("stop-typing", { threadId: currentThreadId });
         }
     }
+
+    // FEATURE: TYPING LOGIC
+    function handleTyping() {
+        if (currentThreadId) {
+            socket.emit("typing", { threadId: currentThreadId });
+            
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                socket.emit("stop-typing", { threadId: currentThreadId });
+            }, 1000);
+        }
+    }
+
+    socket.on("display-typing", () => {
+        document.getElementById("typingIndicator").innerText = "Friend is typing...";
+    });
+
+    socket.on("hide-typing", () => {
+        document.getElementById("typingIndicator").innerText = "";
+    });
+
 </script>
 </body>
 </html>
