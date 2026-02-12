@@ -1,186 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socket Chat</title>
+    <title>CMS Socket Chat</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        h2 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 28px;
-        }
-
-        h3 {
-            color: #333;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        div {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-        }
-
-        input {
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            flex: 1;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            border-color: #667eea;
-        }
-
-        button {
-            padding: 10px 25px;
-            background-color: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #764ba2;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        #messages {
-            list-style: none;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        #messages li {
-            padding: 10px;
-            margin-bottom: 8px;
-            background: #f5f5f5;
-            border-radius: 5px;
-            border-left: 4px solid #667eea;
-            word-wrap: break-word;
-        }
-
-        #messages li:last-child {
-            margin-bottom: 0;
-        }
-
-        body > * {
-            max-width: 500px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        body {
-            display: block;
-            padding: 40px 20px;
-        }
+        /* Basic styling for chat look and feel */
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 20px; }
+        .chat-container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        #messages { list-style: none; height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; }
+        .msg { padding: 8px 12px; margin: 5px; border-radius: 8px; max-width: 70%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #dcf8c6; } /* Aapka message right mein */
+        .received { align-self: flex-start; background: #fff; border: 1px solid #ddd; } /* Doosre ka left mein */
+        .user-label { font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 2px; color: #555; }
+        input { width: 70%; padding: 8px; }
+        button { padding: 8px 15px; cursor: pointer; background: #007bff; color: white; border: none; }
     </style>
 </head>
-
 <body>
 
-    <h2>Simple Chat</h2>
+<div class="chat-container">
+    <h2>Chat App</h2>
+    <input id="myId" placeholder="Apna User ID dalo" />
+    <button onclick="register()">Login</button>
+    <hr style="margin: 15px 0;">
 
-    <div>
-        <input id="senderId" placeholder="Your User ID" />
-        <input id="receiverId" placeholder="Receiver User ID" />
-    </div>
-
-    <br>
-
-    <div>
-        <input id="message" placeholder="Type message..." />
-        <button onclick="sendMessage()">Send</button>
-    </div>
-
-    <br>
-
-    <h3>Messages</h3>
+    <input id="toId" placeholder="Receiver ki ID dalo" />
     <ul id="messages"></ul>
+    <input id="msgInput" placeholder="Message likho..." />
+    <button onclick="send()">Send</button>
+</div>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-    <!-- Socket.IO Client CDN -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+    const socket = io("http://localhost:3000");
 
-    <script>
-        //  Backend se connect karo
-        // Agar ngrok ya deployed server use kar rahe ho to URL change karo
-        const socket = io("http://localhost:3000");
-
-        // Jab connected ho jaye
-        socket.on("connect", () => {
-            console.log("Connected:", socket.id);
-        });
-
-        // User ko online mark karo
-        document.getElementById("senderId").addEventListener("change", () => {
-            const userId = document.getElementById("senderId").value;
-            socket.emit("user-online", userId);
-        });
-
-        //  Message bhejo
-        function sendMessage() {
-            const senderId = document.getElementById("senderId").value;
-            const receiverId = document.getElementById("receiverId").value;
-            const message = document.getElementById("message").value;
-
-            socket.emit("send-message", {
-                senderId,
-                receiverId,
-                message
-            });
-
-            // UI mein message ko turant add karo
-            const li = document.createElement("li");
-            li.textContent = `You: ${message}`;
-            document.getElementById("messages").appendChild(li);
-
-            document.getElementById("message").value = "";
+function register() {
+        const id = document.getElementById("myId").value;
+        if (id) {
+            // Server ko batana ki ye user online hai
+            socket.emit("user-online", id);
+            alert("Ab aap online hain!");
+        } else {
+            alert("Pehle apni ID toh dalo!");
         }
+    }
 
-        //  Message receive karo
-        socket.on("receive-message", (chat) => {
-            const li = document.createElement("li");
-            li.textContent = `${chat.sender}: ${chat.message}`;
-            document.getElementById("messages").appendChild(li);
-        });
-    </script>
+    // UI mein message bubble add karne ka function
+    function addBubble(name, text, type) {
+        const list = document.getElementById("messages");
+        const li = document.createElement("li");
+        li.className = `msg ${type}`;
+        
+        // Agar naam 'You' nahi hai, toh check karo ki name string hai ya object
+        const finalName = (type === 'sent') ? "You" : name;
+        
+        li.innerHTML = `<span class="user-label">${finalName}</span> ${text}`;
+        list.appendChild(li);
+        list.scrollTop = list.scrollHeight;
+    }
 
+    // Jab aap message bhejte ho aur server save kar leta hai
+    socket.on("message-sent", (chat) => {
+        // Aapke liye hamesha "You" dikhayega
+        addBubble("You", chat.message, "sent");
+    });
+
+    // Jab doosra banda aapko message bhejta hai
+    socket.on("receive-message", (chat) => {
+        console.log("Server se data aaya:", chat);
+        
+        // IMPORTANT: Humne backend mein populate kiya hai, toh sender ab ek object hai
+        // Agar chat.sender.username hai toh wo dikhao, varna ID dikhao
+        let senderName = "Other";
+        
+        if (chat.sender && typeof chat.sender.name) {
+            senderName = chat.sender.name || "Unknown User";
+        } else {
+            senderName = chat.sender; // Agar sirf ID aayi ho
+        }
+        
+        addBubble(senderName, chat.message, "received");
+    });
+
+    // Send button click logic
+    function send() {
+        const sId = document.getElementById("myId").value;
+        const rId = document.getElementById("toId").value;
+        const msg = document.getElementById("msgInput").value;
+        if(msg.trim()) {
+            socket.emit("send-message", { senderId: sId, receiverId: rId, message: msg });
+            document.getElementById("msgInput").value = "";
+        }
+    }
+</script>
 </body>
-
 </html>

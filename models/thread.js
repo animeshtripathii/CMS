@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const threadSchema = new mongoose.Schema(
   {
-    participants: [{ type: String, ref: "User" }],
+    participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     lastMessage: {
       type: String,
       default: "" // UI mein null errors rokta hai

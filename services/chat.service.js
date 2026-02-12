@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 export const getChatByThreadService = async (threadId) => {
     return await Chat.find({ thread: threadId })
-        .populate("sender", "username email") 
+        .populate("sender", "name email") 
         .sort({ createdAt: 1 });
 };
 
@@ -25,23 +25,28 @@ export const findOrCreateThreadService = async (userId1, userId2) => {
     return thread;
 };
 
+// 
+
+
 export const sendChatService = async ({ senderId, receiverId, message }) => {
-    const sId = new mongoose.Types.ObjectId(senderId);
+    const sId = new mongoose.Types.ObjectId(senderId); // Added 'new'
     const rId = new mongoose.Types.ObjectId(receiverId);
 
     const thread = await findOrCreateThreadService(sId, rId);
-    console.log("Using thread:", thread)
-
     const newChat = await Chat.create({
         thread: thread._id,
         sender: sId,
         message: message
     });
 
+    // Populate sender info so the socket can emit the name
+    const populatedChat = await Chat.findById(newChat._id)
+        .populate("sender", "name");
+
     await Thread.findByIdAndUpdate(thread._id, {
         lastMessage: message,
         lastMessageAt: new Date()
     });
 
-    return newChat;
+    return populatedChat; 
 };
