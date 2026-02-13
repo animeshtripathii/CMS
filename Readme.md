@@ -1,4 +1,4 @@
-# Application Architecture & Route Flow
+
 
 This document explains the flow of the application in detail, covering routes, controllers, services, middlewares, and utility functions in order.
 
@@ -193,6 +193,7 @@ The architecture follows a clean **Controller-Service** pattern, ensuring separa
 - [x] **Database Persistence:** All messages are saved in MongoDB so they persist after refresh.
 - [x] **User Identification:** User's real 'Name' and 'Email' are displayed instead of ID.
 - [x] **Chat History:** Previous chats are loaded when the user returns.
+- [x] **One-Click History Load:** Clicking the 'Start Chat' button instantly fetches and displays past conversations between the two users.
 - [x] **Typing Indicator:** "Friend is typing..." feature added.
 - [x] **Room-Based Architecture:** Thread/Room logic used for private conversations.
 - [x] **Auto-Scroll:** Chat automatically scrolls down when a new message arrives.
@@ -213,3 +214,6 @@ The architecture follows a clean **Controller-Service** pattern, ensuring separa
 - `chat.html`: Created `joinChat()` function and implemented waiting for 'room-joined' event.
 - `chat.service.js`: Populated `name` and `email` fields so names are displayed.
 
+# Application Architecture & Route Flow
+
+![Chat App Pro Preview](Screenshot%202026-02-13%20112533.png)
