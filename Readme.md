@@ -214,6 +214,6 @@ The architecture follows a clean **Controller-Service** pattern, ensuring separa
 - `chat.html`: Created `joinChat()` function and implemented waiting for 'room-joined' event.
 - `chat.service.js`: Populated `name` and `email` fields so names are displayed.
 
-# Application Architecture & Route Flow
+# Chat App 
 
 ![Chat App Pro Preview](Screenshot%202026-02-13%20112533.png)
