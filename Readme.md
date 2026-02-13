@@ -2,6 +2,21 @@
 
 This document explains the flow of the application in detail, covering routes, controllers, services, middlewares, and utility functions in order.
 
+## API Documentation (Swagger)
+
+This project uses Swagger for API documentation.
+
+- **Installation**:
+  ```bash
+  npm install swagger-ui-express swagger-jsdoc
+  ```
+- **Access**:
+  run server and open: `http://localhost:3000/api-docs`
+- **Configuration**:
+  Swagger is set up in `app.js`.
+
+---
+
 ## 1. Auth Module (`/auth`)
 
 The authentication module handles user signup (with OTP verification) and login.
