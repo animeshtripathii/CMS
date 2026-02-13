@@ -150,6 +150,18 @@ Automated background tasks using `node-cron`.
 
 ---
 
+## 7. Cloudinary Integration
+
+The application uses Cloudinary for robust image and file hosting.
+
+**Workflow:**
+1.  **Local Staging:** `multer` middleware first saves the uploaded file temporarily to the local `uploads/` directory.
+2.  **Cloud Upload:** The `createArtifactService` then uploads this local file to Cloudinary using the `cloudinary` SDK.
+3.  **Cleanup:** Once uploaded successfully to the cloud, the local file is deleted using `fs.unlinkSync` to save server space.
+4.  **Database Storage:** The `secure_url` returned by Cloudinary is stored in the MongoDB `Artifact` document.
+
+---
+
 # Project Summary
 
 This project is a robust and modular Express.js backend application designed to handle:
@@ -178,14 +190,23 @@ The architecture follows a clean **Controller-Service** pattern, ensuring separa
 ---
 
 ## ★ IMPORTANT UPDATE: REAL-TIME SENDER NAME VISIBILITY
-**PROBLEM:** Previously, when a message was sent, only the `senderId` was available in the response. This caused the sender's name to be missing in the real-time chat UI until the page was refreshed.
+**PROBLEM:** Previously in class , when a message was sent, only the `senderId` was available in the response. This caused the sender's name to be missing in the real-time chat UI until the page was refreshed.
 
 **SOLUTION:** The `sendChatService` has been updated to **EXPLICITLY POPULATE** the `sender` field (specifically the `name`) immediately after saving the message.
 
 **RESULT:**
 - The API response and Socket.io event now contain the **FULL USER OBJECT** (including `name`).
 - The Frontend can **INSTANTLY DISPLAY** the sender's name ("You" or "Them") without reloading.
---
+
+## ★ IMPORTANT UPDATE: OTP MAIL SENDING
+**PREVIOUS BEHAVIOR:** During development in class, OTPs (One-Time Passwords) might have been logged to the server console or returned directly in the API response for debugging purposes ("shling in coosle").
+
+**CURRENT BEHAVIOR:** The system now integrates `nodemailer` to securely send OTPs to the user's email address. The console only logs the success message ("Message sent successfully!").
+
+**ACTION REQUIRED:** Ensure a valid `.env` file with `EMAIL_USER` and `EMAIL_PASS` is configured for the mail service to work correctly.
+
+---
+
 ## CMS CHAT MODULE - FEATURES & LOGIC (English Guide)
 
 ### 1. IMPLEMENTED FEATURES
